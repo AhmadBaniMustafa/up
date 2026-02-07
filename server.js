@@ -8,7 +8,12 @@ const fs = require('fs');
 // Configure Multer for File Uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'public/uploads');
+        let uploadDir = path.join(process.cwd(), 'public/uploads');
+        // Vercel fix: Use /tmp for uploads
+        if (process.env.VERCEL) {
+            uploadDir = path.join(require('os').tmpdir(), 'uploads');
+        }
+
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -57,6 +62,18 @@ const db = new sqlite3.Database(dbPath, (err) => {
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Vercel fix: Serve uploads from /tmp
+if (process.env.VERCEL) {
+    app.get('/uploads/:filename', (req, res) => {
+        const filepath = path.join(require('os').tmpdir(), 'uploads', req.params.filename);
+        if (fs.existsSync(filepath)) {
+            res.sendFile(filepath);
+        } else {
+            res.status(404).send('File not found');
+        }
+    });
+}
 
 // View Engine Setup
 app.set('view engine', 'ejs');
