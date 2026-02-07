@@ -6,24 +6,43 @@ const multer = require('multer');
 const fs = require('fs');
 
 // Configure Multer for File Uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        let uploadDir = path.join(process.cwd(), 'public/uploads');
-        // Vercel fix: Use /tmp for uploads
-        if (process.env.VERCEL) {
-            uploadDir = path.join(require('os').tmpdir(), 'uploads');
-        }
+let storage;
 
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+if (process.env.CLOUDINARY_URL) {
+    const cloudinary = require('cloudinary').v2;
+    const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+    // Cloudinary picks up config from process.env.CLOUDINARY_URL automatically
+    console.log("Using Cloudinary Storage");
+    storage = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'blog-uploads',
+            resource_type: 'auto', // Important for video support
+            allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'mp4', 'webm', 'mov']
         }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
+    });
+} else {
+    console.log("Using Local/Tmp Storage");
+    storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            let uploadDir = path.join(process.cwd(), 'public/uploads');
+            // Vercel fix: Use /tmp for uploads
+            if (process.env.VERCEL) {
+                uploadDir = path.join(require('os').tmpdir(), 'uploads');
+            }
+
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        },
+        filename: (req, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, uniqueSuffix + path.extname(file.originalname));
+        }
+    });
+}
 
 const upload = multer({ storage: storage });
 
