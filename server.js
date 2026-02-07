@@ -27,7 +27,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Database Connection
-const dbPath = path.resolve(__dirname, 'db/database.sqlite');
+const dbPath = path.resolve(process.cwd(), 'db/database.sqlite');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
@@ -37,13 +37,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 // Middleware
-app.use(express.static('public'));
+app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // View Engine Setup
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(process.cwd(), 'views'));
 
 // Fake Data Arrays
 const titles = [
