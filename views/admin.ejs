@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Fake Blog</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Admin Dashboard</h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/admin" class="active">Admin Panel</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="admin-controls" style="display: block;">
+            <!-- Custom Article Form -->
+            <div
+                style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <h2>Content Management</h2>
+                <h3
+                    style="margin-bottom: 15px; color: #666; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    Write & Publish</h3>
+                <form action="/api/create-article" method="POST" enctype="multipart/form-data"
+                    style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Title</label>
+                        <input type="text" name="title" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Content</label>
+                        <textarea name="content" rows="5" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Image Source</label>
+                            <input type="url" name="imageUrl" placeholder="Image URL (https://...)"
+                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 5px;">
+                            <span style="font-size: 0.8rem; color: #666;">OR Upload:</span>
+                            <input type="file" name="imageFile" accept="image/*" style="margin-top: 5px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Video Source</label>
+                            <input type="url" name="videoUrl" placeholder="Video URL (https://...)"
+                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 5px;">
+                            <span style="font-size: 0.8rem; color: #666;">OR Upload:</span>
+                            <input type="file" name="videoFile" accept="video/*" style="margin-top: 5px;">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Schedule Publication
+                            (Optional)</label>
+                        <input type="datetime-local" name="scheduledTime"
+                            style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <small style="display: block; color: #666; margin-top: 5px;">Leave blank to publish
+                            immediately.</small>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+                        <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">Publish
+                            Article</button>
+                        <span style="color: #666;">or</span>
+                        <button type="submit" form="generateForm" class="btn"
+                            style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Auto-Generate
+                            Random</button>
+                    </div>
+                </form>
+
+                <!-- Hidden form for generator to allow button connection -->
+                <form id="generateForm" action="/api/generate-article" method="POST" style="display: none;"></form>
+
+                <hr style="margin: 30px 0; border: 0; border-top: 2px solid #f0f0f0;">
+
+                <h2>Automated Scheduling</h2>
+                <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">Configure automatic content generation.
+                </p>
+
+                <!-- Create Schedule Form -->
+                <form action="/api/schedules" method="POST"
+                    style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; background: #f9f9f9; padding: 15px; border-radius: 6px;">
+                    <div>
+                        <label
+                            style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Frequency</label>
+                        <select name="frequency" id="freqSelect" onchange="toggleInputs()" required
+                            style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Time
+                            (24h)</label>
+                        <input type="time" name="time" required
+                            style="padding: 7px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+
+                    <div id="dayOfWeekInput" style="display: none;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Day of
+                            Week</label>
+                        <select name="dayOfWeek" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                        </select>
+                    </div>
+
+                    <div id="dayOfMonthInput" style="display: none;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Day of
+                            Month</label>
+                        <input type="number" name="dayOfMonth" min="1" max="31" placeholder="1-31"
+                            style="padding: 7px; width: 80px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Add Schedule</button>
+                </form>
+
+                <script>
+                    function toggleInputs() {
+                        const freq = document.getElementById('freqSelect').value;
+                        document.getElementById('dayOfWeekInput').style.display = freq === 'weekly' ? 'block' : 'none';
+                        document.getElementById('dayOfMonthInput').style.display = freq === 'monthly' ? 'block' : 'none';
+                    }
+                </script>
+
+                <!-- List Schedules -->
+                <h3 style="margin-top: 20px;">Active Schedules</h3>
+                <table style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f1f1f1; text-align: left;">
+                            <th style="padding: 10px;">ID</th>
+                            <th style="padding: 10px;">Frequency</th>
+                            <th style="padding: 10px;">Time</th>
+                            <th style="padding: 10px;">Details</th>
+                            <th style="padding: 10px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (schedules.length===0) { %>
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding: 15px; color: #999;">No active
+                                    schedules.
+                                </td>
+                            </tr>
+                            <% } %>
+                                <% schedules.forEach(function(sch) { %>
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 10px;">
+                                            <%= sch.id %>
+                                        </td>
+                                        <td style="text-transform: capitalize; padding: 10px;">
+                                            <%= sch.frequency %>
+                                        </td>
+                                        <td style="padding: 10px;">
+                                            <%= sch.time %>
+                                        </td>
+                                        <td style="padding: 10px;">
+                                            <% if (sch.frequency==='weekly' ) { %>
+                                                <%= ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][sch.dayOfWeek] %>
+                                                    <% } else if (sch.frequency==='monthly' ) { %>
+                                                        Day <%= sch.dayOfMonth %>
+                                                            <% } else { %>
+                                                                Every Day
+                                                                <% } %>
+                                        </td>
+                                        <td style="padding: 10px;">
+                                            <form action="/api/schedules/delete/<%= sch.id %>" method="POST">
+                                                <button type="submit" class="btn btn-danger"
+                                                    style="padding: 4px 8px; font-size: 0.8rem; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container" style="background: #fff3e0; border: 1px solid #ffe0b2; margin-bottom: 30px;">
+            <h3>Scheduled Articles (Upcoming)</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align: left; background: #ffe0b2;">
+                        <th style="padding: 10px;">ID</th>
+                        <th style="padding: 10px;">Title</th>
+                        <th style="padding: 10px;">Scheduled for</th>
+                        <th style="padding: 10px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% let hasScheduled=false; %>
+                        <% articles.forEach(function(article) { %>
+                            <% if (article.status==='scheduled' ) { hasScheduled=true; %>
+                                <tr style="border-bottom: 1px solid #ffe0b2;">
+                                    <td style="padding: 10px;">
+                                        <%= article.id %>
+                                    </td>
+                                    <td style="padding: 10px;">
+                                        <%= article.title %>
+                                    </td>
+                                    <td style="padding: 10px;">
+                                        <%= new Date(article.scheduledTime).toLocaleString() %>
+                                    </td>
+                                    <td style="padding: 10px;">
+                                        <div style="display: flex; gap: 5px;">
+                                            <a href="/admin/edit/<%= article.id %>" class="btn"
+                                                style="background: #28a745; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 0.9rem;">Edit</a>
+                                            <form action="/api/delete-article/<%= article.id %>" method="POST"
+                                                onsubmit="return confirm('Are you sure?');" style="margin: 0;">
+                                                <button type="submit" class="btn btn-danger"
+                                                    style="padding: 6px 12px;">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% } %>
+                                    <% }); %>
+                                        <% if (!hasScheduled) { %>
+                                            <tr>
+                                                <td colspan="4" style="text-align:center; padding: 15px; color: #888;">
+                                                    No articles scheduled.</td>
+                                            </tr>
+                                            <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-container">
+            <h3>Recent Published Articles</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align: left; background: #f1f1f1;">
+                        <th style="padding: 10px;">ID</th>
+                        <th style="padding: 10px;">Title</th>
+                        <th style="padding: 10px;">Date</th>
+                        <th style="padding: 10px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (articles.length===0) { %>
+                        <tr>
+                            <td colspan="4" style="text-align:center; padding: 15px;">No articles found.</td>
+                        </tr>
+                        <% } %>
+
+                            <% articles.forEach(function(article) { %>
+                                <% if (!article.status || article.status==='published' ) { %>
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 10px;">
+                                            <%= article.id %>
+                                        </td>
+                                        <td style="padding: 10px;">
+                                            <%= article.title %>
+                                        </td>
+                                        <td style="padding: 10px;">
+                                            <%= new Date(article.timestamp).toLocaleString() %>
+                                        </td>
+                                        <td style="padding: 10px;">
+                                            <div style="display: flex; gap: 5px;">
+                                                <a href="/admin/edit/<%= article.id %>" class="btn"
+                                                    style="background: #28a745; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 0.9rem;">Edit</a>
+                                                <form action="/api/delete-article/<%= article.id %>" method="POST"
+                                                    onsubmit="return confirm('Are you sure?');" style="margin: 0;">
+                                                    <button type="submit" class="btn btn-danger"
+                                                        style="padding: 6px 12px;">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                                        <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>Fake Demo Website - Automated Content Generation</p>
+    </footer>
+</body>
+
+</html>

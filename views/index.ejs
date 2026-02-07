@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Blog Demo</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Fake Blog Demo</h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/admin">Admin Panel</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="articles-grid">
+            <% if (articles.length===0) { %>
+                <div class="no-articles">
+                    <p>No articles generated yet. Wait for the scheduler or go to Admin to generate one.</p>
+                </div>
+                <% } %>
+
+                    <% articles.forEach(function(article) { %>
+                        <article class="card">
+                            <% if (article.videoUrl) { %>
+                                <% if (article.videoUrl.includes('youtube.com') ||
+                                    article.videoUrl.includes('youtu.be')) { %>
+                                    <% let videoId='' ; if (article.videoUrl.includes('youtube.com')) {
+                                        videoId=article.videoUrl.split('v=')[1];
+                                    const ampersandPosition = videoId.indexOf(' &'); if(ampersandPosition !=-1) {
+                                        videoId=videoId.substring(0, ampersandPosition); } } else {
+                                        videoId=article.videoUrl.split('.be/')[1]; } %>
+                                        <div class="card-media"
+                                            style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                            <iframe
+                                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                                                src="https://www.youtube.com/embed/<%= videoId %>" frameborder="0"
+                                                allowfullscreen></iframe>
+                                        </div>
+                                        <% } else { %>
+                                            <div class="card-media">
+                                                <video controls
+                                                    style="width: 100%; height: auto; max-height: 300px; display: block;">
+                                                    <source src="<%= article.videoUrl %>">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                            <% } %>
+                                                <% } else if (article.imageUrl) { %>
+                                                    <div class="card-image"
+                                                        style="background-image: url('<%= article.imageUrl %>')"></div>
+                                                    <% } else { %>
+                                                        <div class="card-image"
+                                                            style="background-color: #eee; display: flex; align-items: center; justify-content: center; color: #aaa;">
+                                                            No Media</div>
+                                                        <% } %>
+
+                                                            <div class="card-content">
+                                                                <span class="date">
+                                                                    <%= new Date(article.timestamp).toLocaleString() %>
+                                                                </span>
+                                                                <h2>
+                                                                    <%= article.title %>
+                                                                </h2>
+                                                                <p class="excerpt">
+                                                                    <%= article.content.substring(0, 100) %>...
+                                                                </p>
+                                                                <a href="#" class="read-more">Read More</a>
+                                                            </div>
+                        </article>
+                        <% }); %>
+        </section>
+    </main>
+
+    <footer>
+        <p>Fake Demo Website - Automated Content Generation</p>
+    </footer>
+</body>
+
+</html>
