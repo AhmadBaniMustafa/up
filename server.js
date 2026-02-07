@@ -27,12 +27,29 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Database Connection
-const dbPath = path.resolve(process.cwd(), 'db/database.sqlite');
+// Database Connection
+let dbPath = path.resolve(process.cwd(), 'db/database.sqlite');
+const os = require('os');
+
+// Vercel /tmp workaround: Copy DB to writable /tmp directory
+if (process.env.VERCEL) {
+    const tempDbPath = path.join(os.tmpdir(), 'database.sqlite');
+    if (fs.existsSync(dbPath)) {
+        try {
+            fs.copyFileSync(dbPath, tempDbPath);
+            console.log("Copied database to /tmp for Vercel execution.");
+            dbPath = tempDbPath;
+        } catch (e) {
+            console.error("Failed to copy DB to /tmp:", e);
+        }
+    }
+}
+
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
-        console.log('Connected to the SQLite database.');
+        console.log(`Connected to the SQLite database at ${dbPath}`);
     }
 });
 
