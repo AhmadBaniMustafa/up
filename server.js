@@ -8,7 +8,13 @@ const fs = require('fs');
 // Configure Multer for File Uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'public/uploads');
+        let uploadDir = path.join(__dirname, 'public/uploads');
+
+        // Vercel Read-Only FS Workaround
+        if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+            uploadDir = path.join('/tmp', 'uploads');
+        }
+
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -27,7 +33,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Database Connection
-const dbPath = path.resolve(__dirname, 'db/database.sqlite');
+// Database Connection
+let dbPath = path.resolve(__dirname, 'db/database.sqlite');
+
+// Vercel / Serverless Environment Workaround (Ephemeral File System)
+// We must copy the DB to /tmp because the source directory is Read-Only.
+if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+    const tmpDbPath = path.join('/tmp', 'database.sqlite');
+    if (!fs.existsSync(tmpDbPath)) {
+        // Copy initial DB to /tmp
+        if (fs.existsSync(dbPath)) {
+            fs.copyFileSync(dbPath, tmpDbPath);
+        }
+    }
+    dbPath = tmpDbPath;
+    console.log("Running on Vercel/Lambda: Using ephemeral DB at " + dbPath);
+}
+
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
